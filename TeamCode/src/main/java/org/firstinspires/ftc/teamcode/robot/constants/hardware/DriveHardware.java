@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.robot.config.hardware;
+package org.firstinspires.ftc.teamcode.robot.constants.hardware;
 
 public class DriveHardware {
 
