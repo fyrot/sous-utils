@@ -31,8 +31,8 @@ public class TempController implements Controller {
 
         driveRef.cacheDriveInputs(
                 -gamepad.left_stick_y,
-                gamepad.left_stick_x,
-                gamepad.right_stick_x,
+                -gamepad.left_stick_x,
+                -gamepad.right_stick_x,
                 -gamepad.right_stick_y
         );
 
