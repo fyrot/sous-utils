@@ -50,6 +50,8 @@ public class StartupMenuLine {
         return null;
     }
 
+
+    public String getKey() { return key; }
     public String getStringVal()
     {
         return getValue().toString();
@@ -60,10 +62,7 @@ public class StartupMenuLine {
         return (double) getValue();
     }
 
-    public boolean getBooleanVal()
-    {
-        return (boolean) boolVal;
-    }
+    public boolean getBooleanVal() { return (boolean) boolVal; }
 
     public void increment(double step)
     {
