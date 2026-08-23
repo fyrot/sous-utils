@@ -4,6 +4,7 @@ import static com.pedropathing.ivy.commands.Commands.instant;
 
 import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.robot.bridge.SubsystemManager;
@@ -16,6 +17,7 @@ public class IntakeSubsystem implements SubsystemManager {
     public IntakeSubsystem(HardwareMap hardwareMap)
     {
         intakeMotor = hardwareMap.get(DcMotorEx.class, IntakeHardware.INTAKE_MOTOR);
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     @Override
