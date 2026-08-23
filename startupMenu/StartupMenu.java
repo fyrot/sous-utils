@@ -29,7 +29,7 @@ public class StartupMenu {
     private static final int MAX_LABEL_LENGTH = 14;
     private long lastRenderTimestamp;
 
-    private StartupMenu(Telemetry telemetry, Gamepad input) {
+    public StartupMenu(Telemetry telemetry, Gamepad input) {
         this.telemetry = telemetry;
         this.input = input;
 
@@ -39,7 +39,8 @@ public class StartupMenu {
 
         settingLines = new ArrayList<StartupMenuLine>();
 
-        initTelemetry();
+        if (telemetry != null) { initTelemetry(); }
+        //initTelemetry();
     }
 
     private void initTelemetry()
@@ -272,7 +273,7 @@ public class StartupMenu {
         } else if (line.getLineType() == StartupLineType.BOOLEAN) {
             return line.getBooleanVal() ? "True" : "False";
         }
-        return "";
+        return "Not reachable";
     }
 
     private String createHiddenLinesLabel()
