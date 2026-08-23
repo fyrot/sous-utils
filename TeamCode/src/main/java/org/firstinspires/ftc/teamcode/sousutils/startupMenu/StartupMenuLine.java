@@ -30,11 +30,11 @@ public class StartupMenuLine {
 
         this.stringOptions = lineBuilder.stringOptions;
 
-        this.min = lineBuilder.min;
-        this.max = lineBuilder.max;
+        this.min = lineBuilder.min == null ? 0 : lineBuilder.min;
+        this.max = lineBuilder.max == null ? 0 : lineBuilder.max;
 
-        this.doubleVal = lineBuilder.min;
-        this.boolVal = lineBuilder.boolDefault;
+        this.doubleVal = this.min;
+        this.boolVal = lineBuilder.boolDefault == null ? false : lineBuilder.boolDefault;
     }
 
     public Object getValue()
