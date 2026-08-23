@@ -16,12 +16,12 @@ public class StartupFormat {
         return new String(builder);
     }
 
-    public static String justifyBetween(int space, String[] content)
+    public static String justifyBetween(int space, String... content)
     {
         return justifyBetween(space, ' ', content);
     }
 
-    public static String justifyBetween(int space, char justifyChar, String[] content)
+    public static String justifyBetween(int space, char justifyChar, String... content)
     {
         int actualSpace = space;
         for (String data : content) { actualSpace -= data.length(); }

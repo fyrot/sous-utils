@@ -7,6 +7,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.firstinspires.ftc.teamcode.sousutils.startupMenu.StartupFormat.*;
+
 public class StartupMenu {
     private Telemetry telemetry;
 
@@ -16,9 +18,12 @@ public class StartupMenu {
     // LinkedHashSet would unironically actually kinda work here if we were using iterators
     private List<StartupMenuLine> settingLines;
     private int selectedInd = 0;
+    private int windowStart = -1;
+    private int windowEnd = -1; // non-inclusive
     private Gamepad input;
 
     private String title = "Startup Menu";
+    private static final String TRUNCATE_WITH = "...";
     private static final int TRANSMISSION_INTERVAL_MS = 25; // so we don't obliterate the connection
     private static final long RENDERING_INTERVAL_MS = 10;
     private static final int MAX_LABEL_LENGTH = 14;
@@ -83,36 +88,225 @@ public class StartupMenu {
         for (StartupMenuLine line : lines) { addLine(line); }
     }
 
+    public void initWindow()
+    {
+        int lineBudget = height;
+        lineBudget -= 4; // title, separator, separator, bottom info
+
+        this.windowStart = 0;
+        this.windowEnd = Math.min(lineBudget, settingLines.size());
+    }
+
     public void run()
     {
+
+        initWindow();
+
         boolean running = true;
         while (running)
         {
-            running = handleInput();
-
             long currentTime = System.currentTimeMillis();
-            if (currentTime - lastRenderTimestamp > RENDERING_INTERVAL_MS)
+            long delta = currentTime - lastRenderTimestamp;
+
+            running = handleInput((double) delta / 1000);
+
+            if (delta > RENDERING_INTERVAL_MS)
             {
-                render();
+                renderToTelemetry(getRendered());
+                telemetry.update();
+            }
+        }
+
+        finishRun();
+
+    }
+
+    public boolean handleInput(double delta)
+    {
+        if (input == null) { /* temp for testing, swap to false later */ return true; }
+        if (input.startWasReleased()) { return false; }
+        // clauses for exit
+
+        StartupMenuLine line = settingLines.get(selectedInd);
+        StartupLineType lineType = line.getLineType();
+
+        if (input.dpadUpWasPressed()) {
+            navigateIndex(-1);
+            return true;
+        } else if (input.dpadDownWasPressed()) {
+            navigateIndex(1);
+            return true;
+        }
+
+        if (input.aWasPressed()) {
+            if (lineType == StartupLineType.BOOLEAN) { line.increment(0); return true; }
+            if (lineType == StartupLineType.STRING) { line.increment(0); return true; }
+        }
+
+        int notches = 32;
+        if (input.dpadRightWasPressed()) {
+            if (lineType == StartupLineType.BOOLEAN) { line.increment(0); return true; }
+            if (lineType == StartupLineType.STRING) { line.increment(0); return true; }
+            if (lineType == StartupLineType.DOUBLE) {
+                // make this cleaner later
+                double stepSize = (line.getDoubleMaxVal() - line.getDoubleMinVal()) / notches;
+
+                line.increment(stepSize);
+                return true;
+            }
+        }
+
+        if (input.dpadLeftWasPressed()) {
+            if (lineType == StartupLineType.BOOLEAN) { line.decrement(0); return true; }
+            if (lineType == StartupLineType.STRING) { line.decrement(0); return true; }
+            if (lineType == StartupLineType.DOUBLE) {
+                // make this cleaner later
+
+                double stepSize = (line.getDoubleMaxVal() - line.getDoubleMinVal()) / notches;
+
+                line.decrement(stepSize);
+                return true;
+            }
+        }
+
+        double GAMEPAD_DEADZONE = 0.02;
+        if (Math.abs(input.left_stick_x) > GAMEPAD_DEADZONE)
+        {
+            if (lineType == StartupLineType.DOUBLE)
+            {
+                double sensitivity = 0.5; // tuned for 2s to go from one end to the other
+                double speed = input.left_stick_x;
+                double rangeWidth = line.getDoubleMaxVal() - line.getDoubleMinVal();
+                double stepSize = delta * speed * sensitivity * rangeWidth;
+
+                line.increment(stepSize);
             }
         }
 
 
-    }
-
-    public boolean handleInput()
-    {
-        if (input.startWasReleased()) { return false; }
-        // clauses for exit
 
         return true;
 
     }
 
-    public void render()
+    private int indexClamp(int val, int min, int max)
+    {
+        return Math.min(Math.max(min, val), max);
+    }
+
+    private void navigateIndex(int step)
+    {
+        selectedInd = indexClamp(selectedInd + step, 0, settingLines.size() - 1);
+        if (selectedInd < windowStart) { windowStart = selectedInd; }
+        if (selectedInd >= windowEnd) { /* >= because not inclusive */ windowEnd = selectedInd + 1; }
+    }
+
+    public List<String> getRendered()
     {
         // adjust for line budgeting here, title, separators, bottom info
+        int lineBudget = height;
+        if (lineBudget <= 5) { /* way too small to be useful */ return null; }
 
+        List<String> allLines = new ArrayList<String>();
+        allLines.add(center(width, title));
+        allLines.add(repeatChar('-', width));
+        lineBudget -= 4; // account for end already
+
+        for (int lineInd = windowStart; lineInd < windowEnd; lineInd++)
+        {
+            StartupMenuLine currentLine = settingLines.get(lineInd);
+            allLines.add(renderLine(currentLine, lineInd));
+            lineBudget -= 1;
+        }
+        while (lineBudget > 0)
+        {
+            allLines.add("");
+            lineBudget -= 1;
+        }
+
+        // ending separator and data line
+        allLines.add(repeatChar('-', width));
+        allLines.add(justifyBetween(width, createHiddenLinesLabel(), "Continue w/ start"));
+
+        return allLines;
+    }
+
+    private String renderLine(StartupMenuLine line, int lineInd)
+    {
+        boolean selected = lineInd == selectedInd;
+
+
+        String label = (selected ? "> " : "") + line.getDisplayName();
+
+        String value = renderLineData(line);
+
+        int totalLength = label.length() + value.length();
+        // TODO: take another look at how we handle this later
+        if (value.length() + TRUNCATE_WITH.length() + 3 > width) { return "Too long to render";}
+
+        if (totalLength > width)
+        {
+            label = truncate(label, TRUNCATE_WITH,  label.length() - Math.abs(totalLength - width));
+        }
+
+        return justifyBetween(width, label, value);
+    }
+
+    private String renderLineData(StartupMenuLine line)
+    {
+        if (line.getLineType() == StartupLineType.STRING) {
+            return "< " + line.getStringVal() + " >";
+        } else if (line.getLineType() == StartupLineType.DOUBLE) {
+            double min = line.getDoubleMinVal();
+            double max = line.getDoubleMaxVal();
+            double val = line.getDoubleVal();
+
+            double percentage = (val - min) * 100 / (max - min);
+            int percentageInt = (int) percentage;
+
+            String parantheses = String.format("%d%%", percentageInt);
+            if (min == val) { parantheses = "Min"; }
+            if (max == val) { parantheses = "Max"; }
+
+            return String.format("%.3f (%s)", val, parantheses);
+        } else if (line.getLineType() == StartupLineType.BOOLEAN) {
+            return line.getBooleanVal() ? "True" : "False";
+        }
+        return "";
+    }
+
+    private String createHiddenLinesLabel()
+    {
+        int linesAbove = windowStart;
+        int linesBelow = settingLines.size() - windowEnd;
+        boolean hasAbove = linesAbove > 0;
+        boolean hasBelow = linesBelow > 0;
+
+        StringBuilder linesHiddenLabel = new StringBuilder();
+
+        if (hasAbove) { linesHiddenLabel.append(String.format("%d above", linesAbove)); }
+        if (hasBelow)
+        {
+            if (linesHiddenLabel.length() > 0) { linesHiddenLabel.append(", "); }
+            linesHiddenLabel.append(String.format("%d below", linesBelow));
+        }
+
+
+        return linesHiddenLabel.toString();
+
+    }
+
+    private void renderToTelemetry(List<String> lines)
+    {
+        for (String line : lines)
+        {
+            telemetry.addLine(line);
+        }
+    }
+
+    private void finishRun()
+    {
+        //
     }
 
 
