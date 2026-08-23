@@ -23,6 +23,7 @@ public class StartupFormat {
 
     public static String justifyBetween(int space, char justifyChar, String... content)
     {
+
         int actualSpace = space;
         for (String data : content) { actualSpace -= data.length(); }
 
@@ -30,16 +31,16 @@ public class StartupFormat {
 
         int gaps = content.length - 1;
 
-        StringBuilder justified = new StringBuilder(space);
+        StringBuilder justified = new StringBuilder();
 
-        if (content.length == 1) {
+        if (gaps == 0) {
             justified.append(content[0]);
             justified.append(repeatChar(justifyChar, actualSpace));
         } else {
-            int spacesPerGap = actualSpace / Math.max(1, gaps);
-            int leftover = actualSpace % Math.max(1, gaps);
+            int spacesPerGap = actualSpace / gaps;
+            int leftover = actualSpace % gaps;
 
-            for (int i = 0; i < content.length - 1; i++)
+            for (int i = 0; i < gaps; i++)
             {
                 justified.append(content[i]);
                 justified.append(repeatChar(justifyChar, spacesPerGap));
@@ -50,6 +51,8 @@ public class StartupFormat {
                     leftover -= 1;
                 }
             }
+
+            justified.append(content[content.length - 1]); // i remembered then forgot :(
         }
 
         return justified.toString();
