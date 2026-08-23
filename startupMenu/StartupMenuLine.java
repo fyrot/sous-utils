@@ -52,6 +52,8 @@ public class StartupMenuLine {
 
 
     public String getKey() { return key; }
+    public String getDisplayName() { return displayName; }
+    public StartupLineType getLineType() { return lineType; }
     public String getStringVal()
     {
         return getValue().toString();
@@ -64,12 +66,21 @@ public class StartupMenuLine {
 
     public boolean getBooleanVal() { return (boolean) boolVal; }
 
+    public double getDoubleMinVal() { return min; }
+    public double getDoubleMaxVal() { return max; }
+
+
+    private double doubleClamp(double val, double min, double max)
+    {
+        return Math.min(Math.max(min, val), max);
+    }
+
     public void increment(double step)
     {
         if (lineType == StartupLineType.STRING) {
             stringInd = (stringInd + 1) % stringOptions.size();
         } else if (lineType == StartupLineType.DOUBLE) {
-            doubleVal = Math.min(max, doubleVal + step);
+            doubleVal = doubleClamp(doubleVal + step, min, max);
         } else if (lineType == StartupLineType.BOOLEAN) {
             boolVal = !boolVal;
         }
@@ -78,9 +89,9 @@ public class StartupMenuLine {
     public void decrement(double step)
     {
         if (lineType == StartupLineType.STRING) {
-
+            stringInd = (stringInd + stringOptions.size() - 1) % stringOptions.size();
         } else if (lineType == StartupLineType.DOUBLE) {
-            doubleVal = Math.max(min, doubleVal -= step);
+            doubleVal = doubleClamp(doubleVal - step, min, max);
         } else if (lineType == StartupLineType.BOOLEAN) {
             boolVal = !boolVal;
         }
