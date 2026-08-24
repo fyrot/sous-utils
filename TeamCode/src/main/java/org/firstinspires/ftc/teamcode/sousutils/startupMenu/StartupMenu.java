@@ -43,6 +43,29 @@ public class StartupMenu {
         //initTelemetry();
     }
 
+
+    public Object getValue(String key)
+    {
+        StartupMenuLine correctLine = null;
+        for (StartupMenuLine line : settingLines)
+        {
+            if (key.equals(line.getKey())) { correctLine = line;}
+        }
+        return correctLine != null ? correctLine.getValue() : null;
+    }
+
+    public <T> T getValue(Class<T> dataType, String key)
+    {
+        Object foundValue = getValue(key);
+        if (dataType.isInstance(foundValue)) {
+            return dataType.cast(foundValue);
+        } else {
+            // invalid types
+        }
+        // not found, but the isInstance may trigger for null values too so this is temp.
+        return null;
+    }
+
     private void initTelemetry()
     {
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.MONOSPACE);
@@ -96,6 +119,7 @@ public class StartupMenu {
 
         this.windowStart = 0;
         this.windowEnd = Math.min(lineBudget, settingLines.size());
+        this.selectedInd = this.windowStart;
     }
 
     public void run()
@@ -227,7 +251,7 @@ public class StartupMenu {
 
         // ending separator and data line
         allLines.add(repeatChar('-', width));
-        allLines.add(justifyBetween(width, createHiddenLinesLabel(), "Continue w/ start"));
+        allLines.add(justifyBetween(width, createHiddenLinesLabel(), "Continue w/ START"));
 
         return allLines;
     }
@@ -308,6 +332,10 @@ public class StartupMenu {
     private void finishRun()
     {
         //
+        for (StartupMenuLine line : settingLines)
+        {
+            // call onFinish
+        }
     }
 
 

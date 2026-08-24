@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.sousutils.startupMenu;
 
-public class StartupMenuException extends RuntimeException {
+class StartupMenuException extends RuntimeException {
     public StartupMenuException()
     {
         super();

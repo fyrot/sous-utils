@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.sousutils.startupMenu;
 
 import java.util.Arrays;
 
-public class StartupFormat {
+class StartupFormat {
 
     private StartupFormat() { /* shouldn't be constructed unless we add settings(?) */ }
 

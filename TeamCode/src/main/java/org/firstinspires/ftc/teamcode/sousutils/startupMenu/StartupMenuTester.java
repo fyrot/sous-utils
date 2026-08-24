@@ -3,29 +3,29 @@ package org.firstinspires.ftc.teamcode.sousutils.startupMenu;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StartupMenuTester {
+class StartupMenuTester {
     public static void main(String[] args) {
-        StartupMenu menu = new StartupMenu(null, null);
+        StartupMenu menu = new StartupMenu(null, null).setTitle("\uD83E\uDD16 Example Menu");
         List<StartupMenuLine> exampleLines = new ArrayList<StartupMenuLine>();
 
         exampleLines.add(
                 new StartupMenuLine.Builder("key1", StartupLineType.STRING)
-                        .setDisplayLabel("Fav. Color")
-                        .addStringOptions(new String[]{"Red", "Orange", "Yellow", "Azure"})
+                        .setDisplayLabel("Alliance")
+                        .addStringOptions(new String[]{"Red", "Blue", "None"})
                         .build()
         );
 
         exampleLines.add(
                 new StartupMenuLine.Builder("key2", StartupLineType.DOUBLE)
-                        .setDisplayLabel("GPA")
-                        .setRange(0.0, 5.0)
+                        .setDisplayLabel("OPR")
+                        .setRange(-10.0, 300.0)
                         .build()
         );
 
         exampleLines.add(
                 new StartupMenuLine.Builder("key3", StartupLineType.BOOLEAN)
-                        .setDisplayLabel("Very Cool?")
-                        .setDefaultBoolean(false)
+                        .setDisplayLabel("Passed Inspection?")
+                        .setDefaultBoolean(true)
                         .build()
         );
 
