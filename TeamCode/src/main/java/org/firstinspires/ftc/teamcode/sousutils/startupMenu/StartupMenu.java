@@ -126,20 +126,23 @@ public class StartupMenu {
     {
 
         initWindow();
-
+        long lastInput = System.currentTimeMillis();
         boolean running = true;
         while (running)
         {
             long currentTime = System.currentTimeMillis();
             long delta = currentTime - lastRenderTimestamp;
 
-            running = handleInput((double) delta / 1000);
+            running = handleInput((double) (currentTime - lastInput) / 1000.0);
 
             if (delta > RENDERING_INTERVAL_MS)
             {
                 renderToTelemetry(getRendered());
                 telemetry.update();
             }
+
+            lastInput = currentTime;
+
         }
 
         finishRun();
@@ -204,6 +207,7 @@ public class StartupMenu {
                 double rangeWidth = line.getDoubleMaxVal() - line.getDoubleMinVal();
                 double stepSize = delta * speed * sensitivity * rangeWidth;
 
+                //line.increment(0.000001);
                 line.increment(stepSize);
             }
         }
@@ -222,8 +226,8 @@ public class StartupMenu {
     private void navigateIndex(int step)
     {
         selectedInd = indexClamp(selectedInd + step, 0, settingLines.size() - 1);
-        if (selectedInd < windowStart) { windowStart = selectedInd; }
-        if (selectedInd >= windowEnd) { /* >= because not inclusive */ windowEnd = selectedInd + 1; }
+        if (selectedInd < windowStart) { windowStart = selectedInd; windowEnd--; }
+        if (selectedInd >= windowEnd) { /* >= because not inclusive */ windowEnd = selectedInd + 1; windowStart++; }
     }
 
     public List<String> getRendered()
@@ -263,7 +267,7 @@ public class StartupMenu {
 
         String label = (selected ? "> " : "") + line.getDisplayName();
 
-        String value = renderLineData(line);
+        String value = (selected ? surround(renderLineData(line), "< " ," >") : renderLineData(line));
 
         int totalLength = label.length() + value.length();
         // TODO: take another look at how we handle this later
@@ -280,7 +284,7 @@ public class StartupMenu {
     private String renderLineData(StartupMenuLine line)
     {
         if (line.getLineType() == StartupLineType.STRING) {
-            return "< " + line.getStringVal() + " >";
+            return line.getStringVal();
         } else if (line.getLineType() == StartupLineType.DOUBLE) {
             double min = line.getDoubleMinVal();
             double max = line.getDoubleMaxVal();
@@ -327,6 +331,7 @@ public class StartupMenu {
         {
             telemetry.addLine(line);
         }
+        lastRenderTimestamp = System.currentTimeMillis();
     }
 
     private void finishRun()
