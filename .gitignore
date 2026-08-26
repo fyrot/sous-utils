@@ -79,3 +79,7 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# don't track sound fx
+TeamCode/src/main/res/raw/*.mp3
+TeamCode/src/main/res/raw/*.wav
