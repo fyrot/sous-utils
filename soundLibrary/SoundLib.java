@@ -1,93 +1,144 @@
 package org.firstinspires.ftc.teamcode.sousutils.soundLibrary;
 
 import com.qualcomm.ftccommon.SoundPlayer;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.android.AndroidSoundPool;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SoundLib {
-    private SoundPlayer player;
-    private List<SoundLine> sounds;
-    private HardwareMap hardwareMap;
+    private AndroidSoundPool soundPool;
 
-    private boolean created = false;
-    private int totalWeight = -1;
+    private List<SoundLine> sounds = new ArrayList<SoundLine>();
 
-    public SoundLib(HardwareMap hardwareMap)
+    private boolean preload = false;
+    private static final long PRELOAD_TIMEOUT_MS = 250;
+
+    private static final long PRELOAD_DELAY_MS = 25;
+    public SoundLib()
     {
-        this.player = SoundPlayer.getInstance();
-        this.sounds = new ArrayList<SoundLine>();
-        this.hardwareMap = hardwareMap;
+        soundPool = new AndroidSoundPool();
+        init();
     }
 
-    public SoundLib addLine(SoundLine sound)
+    private void init()
     {
-        if (created) { return this; }
-        sounds.add(sound);
+        soundPool.initialize(SoundPlayer.getInstance());
+        soundPool.setLoop(0);
+        soundPool.setVolume(1);
+    }
+
+    public SoundLib enablePreloading()
+    {
+        this.preload = true;
         return this;
     }
 
-    public SoundLib addLines(SoundLine... lines)
+    public SoundLib setVolume(float volume) { soundPool.setVolume(volume); return this; }
+    public SoundLib setVolume(double volume) { setVolume((float) volume); return this; }
+    public SoundLib setVolume(int volume) { setVolume((float)volume); return this; }
+
+    public SoundLib mute() { soundPool.setVolume(0); return this; }
+
+
+    private void tryPreload(String soundFile)
     {
-        if (created) { return this; }
-        for (SoundLine line : lines)
+        boolean preloaded = soundPool.preloadSound(soundFile);
+
+        long startedAt = System.currentTimeMillis();
+        long endAt = startedAt + PRELOAD_TIMEOUT_MS;
+
+        while (!preloaded && System.currentTimeMillis() < endAt)
         {
-            addLine(line);
-        }
-        return this;
-    }
-
-    public SoundLib create()
-    {
-        calculateWeights();
-        created = true;
-        return this;
-    }
-
-    private void calculateWeights()
-    {
-        int actualWeight = 0;
-
-        for (SoundLine sound : sounds) { actualWeight += sound.getProbability(); }
-
-        totalWeight = actualWeight;
-    }
-
-    public void playRandom()
-    {
-        if (!created) { /* */ throw new RuntimeException("Call .create() on your SoundLib!"); }
-
-        int chances = (int) (Math.random() * (totalWeight)) + 1;
-
-        for (SoundLine sound : sounds)
-        {
-            chances -= sound.getProbability();
-            if (chances <= 0) {
-                playSound(sound.getSoundCode());
-                return;
+            preloaded = soundPool.preloadSound(soundFile);
+            try {
+                Thread.sleep(PRELOAD_DELAY_MS);
+            } catch (InterruptedException ex) {
+                break;
             }
+
+        }
+    }
+
+    public SoundLib addSound(SoundLine soundLine)
+    {
+        sounds.add(soundLine);
+
+        if (preload)
+        {
+            tryPreload(soundLine.getSoundName());
+        }
+
+        return this;
+    }
+
+    public SoundLib addSound(String soundName, int priority)
+    {
+        addSound(new SoundLine(soundName, priority));
+        return this;
+    }
+
+    public SoundLib addSound(String soundName)
+    {
+        addSound(soundName, 1);
+        return this;
+    }
+
+    public SoundLib addSounds(String... soundNames)
+    {
+        for (String soundName : soundNames) { addSound(soundName); }
+        return this;
+    }
+
+    public SoundLib addSounds(SoundLine... soundLines)
+    {
+        for (SoundLine line : soundLines) { addSound(line); }
+        return this;
+    }
+
+    private void playSound(String fileName)
+    {
+        // TODO: investigate preload on missing behavior
+        // TODO: see if we can route resources rather than use onbot file uploads
+
+        try {
+            soundPool.play(fileName);
+        } catch (IllegalStateException ex) {
+            // file not found in resources
         }
 
     }
 
-    public void playLocation(String soundLocation)
+
+    public String play(String soundName)
     {
-        for (SoundLine sound : sounds)
-        {
-            if (sound.getSoundLocation().equals(soundLocation))
+        for (SoundLine line : sounds) {
+            if (soundName.equals(line.getSoundName()))
             {
-                playSound(sound.getSoundCode());
-                return;
+                playSound(soundName);
+                return soundName;
             }
         }
+        return null;
     }
 
-    private void playSound(int soundID)
+    public String playRandom()
     {
-        player.startPlaying(
-                hardwareMap.appContext, soundID
-        );
+        int totalChance = 0;
+        for (SoundLine line : sounds) { totalChance += line.getProbability(); }
+
+        int chances = (int) (Math.random() * totalChance) + 1;
+        for (SoundLine line : sounds)
+        {
+            chances -= line.getProbability();
+            if (chances <= 0)
+            {
+                playSound(line.getSoundName());
+                return line.getSoundName();
+            }
+        }
+        return null;
     }
 
 

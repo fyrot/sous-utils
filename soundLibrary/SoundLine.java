@@ -1,48 +1,23 @@
 package org.firstinspires.ftc.teamcode.sousutils.soundLibrary;
 
-import android.annotation.SuppressLint;
 
-import com.qualcomm.robotcore.hardware.HardwareMap;
+class SoundLine {
+    private final String soundName; // includes file extension (.wav, .mp3)
+    private final int probability;
 
-public class SoundLine {
-    private String soundLocation;
-    private int soundCode = 0;
-    private int probability;
 
-    public SoundLine(String soundLocation, int probability, HardwareMap hardwareMap)
+    public SoundLine(String soundName, int probability)
     {
-        this.soundLocation = soundLocation;
-        this.probability = Math.max(Math.abs(probability), 1);
-
-        findSound(hardwareMap);
+        this.soundName = soundName;
+        this.probability = probability;
     }
 
-    public SoundLine(String soundLocation, HardwareMap hardwareMap)
+    public SoundLine(String soundName)
     {
-        this(soundLocation, 1, hardwareMap);
+        this(soundName, 1);
     }
 
-    private void findSound(HardwareMap hardwareMap)
-    {
-        soundCode = hardwareMap.appContext.getResources().getIdentifier(
-            soundLocation, "raw", hardwareMap.appContext.getPackageName()
-        );
-    }
-
-
-    protected int getSoundCode()
-    {
-        return soundCode;
-    }
-
-    protected int getProbability()
-    {
-        return probability;
-    }
-
-    protected String getSoundLocation()
-    {
-        return soundLocation;
-    }
+    protected String getSoundName() { return soundName; }
+    protected int getProbability() { return probability; }
 
 }
