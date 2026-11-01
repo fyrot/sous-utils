@@ -26,6 +26,7 @@ public class StratagemInputs {
     public void tick()
     {
         int elapsed = (int) timer.milliseconds();
+
         if (elapsed > timeoutMs)
         {
 
